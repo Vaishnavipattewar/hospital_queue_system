@@ -8,6 +8,7 @@ import api from '../../services/api';
 import StatCard from '../../components/StatCard';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 
 // Status badge helper
 const StatusBadge = ({ status }) => {
@@ -30,10 +31,17 @@ export default function AdminDashboard() {
   useEffect(() => {
     api.get('/admin/stats')
       .then(({ data }) => setStats(data.data))
+      .catch(() => toast.error('Failed to load dashboard stats'))
       .finally(() => setLS(false));
-
-    api.get('/admin/appointments')
-      .then(({ data }) => setRecent(data.data.slice(0, 8)))
+    api.get('/appointments')
+      .then(({ data }) =>
+        setRecent(
+          [...(data.data || [])]
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .slice(0, 8)
+        )
+      )
+      .catch(() => toast.error('Failed to load recent appointments'))
       .finally(() => setLR(false));
   }, []);
 

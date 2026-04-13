@@ -27,6 +27,8 @@ export default function PatientDashboard() {
   const [appointments, setAppointments]     = useState([]);
   const [loading, setLoading]               = useState(true);
   const [cancelling, setCancelling]         = useState(null);
+  const [queueSnapshot, setQueueSnapshot]   = useState(null);
+  const [queueLoading, setQueueLoading]     = useState(false);
 
   useEffect(() => {
     api.get('/appointments')
@@ -69,6 +71,52 @@ export default function PatientDashboard() {
     .sort((a, b) => new Date(b.date) - new Date(a.date))
     .slice(0, 5);
 
+  useEffect(() => {
+    const nextActive = appointments
+      .filter((a) => ['pending', 'confirmed', 'in-progress'].includes(a.status))
+      .filter((a) => isToday(new Date(a.date)) || isFuture(new Date(a.date)))
+      .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+
+    if (!nextActive?.doctor?._id) {
+      setQueueSnapshot(null);
+      setQueueLoading(false);
+      return;
+    }
+
+    const loadQueueSnapshot = async () => {
+      setQueueLoading(true);
+      try {
+        const date = format(new Date(nextActive.date), 'yyyy-MM-dd');
+        const { data } = await api.get(`/appointments/queue/${nextActive.doctor._id}`, {
+          params: { date },
+        });
+
+        const activeQueue = (data.data.queue || []).filter((q) =>
+          ['pending', 'confirmed', 'in-progress'].includes(q.status)
+        );
+        const idx = activeQueue.findIndex((q) => q._id === nextActive._id);
+        const peopleAhead = idx >= 0 ? idx : 0;
+        const avgWait = data.data.avgWaitMinutes ?? 15;
+
+        setQueueSnapshot({
+          appointmentId: nextActive._id,
+          tokenNumber: nextActive.tokenNumber,
+          doctorName: nextActive.doctor?.name,
+          currentToken: data.data.currentToken,
+          position: idx >= 0 ? idx + 1 : null,
+          peopleAhead,
+          estimatedWaitMinutes: peopleAhead * avgWait,
+        });
+      } catch {
+        setQueueSnapshot(null);
+      } finally {
+        setQueueLoading(false);
+      }
+    };
+
+    loadQueueSnapshot();
+  }, [appointments]);
+
   return (
     <div className="space-y-8 animate-fade-in">
 
@@ -102,6 +150,43 @@ export default function PatientDashboard() {
         <StatCard title="Completed"         value={completed} icon={FiCheckCircle}  iconBg="bg-emerald-50 text-emerald-600" />
         <StatCard title="Cancelled"         value={cancelled} icon={FiXCircle}      iconBg="bg-red-50 text-red-500" />
       </div>
+
+      {/* Queue position snapshot */}
+      {(queueLoading || queueSnapshot) && (
+        <div className="card p-6">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h3 className="section-title mb-0">Current Queue Position</h3>
+            {queueSnapshot?.appointmentId && (
+              <Link to={`/patient/queue/${queueSnapshot.appointmentId}`} className="btn-outline btn-sm">
+                <FiClock className="w-3.5 h-3.5" /> Open Live Queue
+              </Link>
+            )}
+          </div>
+          {queueLoading ? (
+            <p className="text-sm text-slate-400">Loading queue details…</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-slate-400 text-xs">Doctor</p>
+                <p className="font-semibold text-slate-700">{queueSnapshot?.doctorName}</p>
+                <p className="text-xs text-slate-500">Token #{queueSnapshot?.tokenNumber}</p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-slate-400 text-xs">Serving / Position</p>
+                <p className="font-semibold text-slate-700">
+                  {queueSnapshot?.currentToken ? `#${queueSnapshot.currentToken}` : 'Not started'}{' '}
+                  {queueSnapshot?.position ? `· #${queueSnapshot.position}` : ''}
+                </p>
+                <p className="text-xs text-slate-500">{queueSnapshot?.peopleAhead ?? 0} ahead of you</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                <p className="text-blue-500 text-xs">Estimated Wait</p>
+                <p className="font-semibold text-blue-700">~{queueSnapshot?.estimatedWaitMinutes ?? 0} min</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Upcoming appointments */}
       <div className="card">

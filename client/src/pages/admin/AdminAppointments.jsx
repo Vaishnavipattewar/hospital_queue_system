@@ -26,7 +26,7 @@ export default function AdminAppointments() {
 
   const fetchAppointments = () => {
     setLoading(true);
-    api.get('/admin/appointments')
+    api.get('/appointments')
       .then(({ data }) => setAppointments(data.data))
       .catch(() => toast.error('Failed to load appointments'))
       .finally(() => setLoading(false));
