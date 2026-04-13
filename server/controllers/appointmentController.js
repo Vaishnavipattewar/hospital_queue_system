@@ -126,15 +126,23 @@ const updateAppointment = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Appointment not found' });
     }
 
-    const { status, prescription, notes } = req.body;
+   const { status, prescription, notes, paymentStatus, paymentId } = req.body;
 
     if (req.user.role === 'patient') {
       // Patients can only cancel their own appointments
       if (appointment.patient.toString() !== req.user._id.toString()) {
         return res.status(403).json({ success: false, message: 'Not authorized' });
       }
-      appointment.status = 'cancelled';
+     if (status === 'cancelled') {
+  appointment.status = 'cancelled';
+}
+      if (paymentStatus !== undefined) {
+  appointment.paymentStatus = paymentStatus;
+}
 
+if (paymentId !== undefined) {
+  appointment.paymentId = paymentId;
+}
     } else if (req.user.role === 'doctor' || req.user.role === 'admin') {
       if (status)       appointment.status       = status;
       if (prescription !== undefined) appointment.prescription = prescription;

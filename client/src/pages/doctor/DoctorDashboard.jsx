@@ -244,18 +244,25 @@ export default function DoctorDashboard() {
                       <div className="flex items-center gap-2">
                         {/* Start consultation */}
                         {(a.status === 'pending' || a.status === 'confirmed') && (
-                          <button
-                            onClick={() => updateStatus(a._id, 'in-progress')}
-                            disabled={updating === a._id}
-                            className="btn-sm bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-xl px-3 py-1.5 inline-flex items-center gap-1 transition"
-                            title="Start consultation"
-                          >
-                            {updating === a._id
-                              ? <LoadingSpinner size="sm" text="" />
-                              : <><FiPlay className="w-3 h-3" /> Start</>
-                            }
-                          </button>
-                        )}
+  <>
+    {a.type === "online" && a.paymentStatus !== "paid" ? (
+      <span className="text-red-500 text-xs font-medium">
+        Payment Pending
+      </span>
+    ) : (
+      <button
+        onClick={() => updateStatus(a._id, 'in-progress')}
+        disabled={updating === a._id}
+        className="btn-sm bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-xl px-3 py-1.5 inline-flex items-center gap-1 transition"
+      >
+        {updating === a._id
+          ? <LoadingSpinner size="sm" text="" />
+          : <><FiPlay className="w-3 h-3" /> Start</>
+        }
+      </button>
+    )}
+  </>
+)}
 
                         {/* Complete (with prescription) */}
                         {a.status === 'in-progress' && (

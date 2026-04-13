@@ -44,9 +44,18 @@ const appointmentSchema = new mongoose.Schema(
     },
     prescription: { type: String, default: '' },
     notes:        { type: String, default: '' },
+    paymentStatus: {
+  type: String,
+  default: "pending"
+
+    
+    
   },
-  { timestamps: true }
-);
+  paymentId: {
+  type: String
+}
+}, { timestamps: true });
+
 
 // Index for fast queue queries
 appointmentSchema.index({ doctor: 1, date: 1, tokenNumber: 1 });

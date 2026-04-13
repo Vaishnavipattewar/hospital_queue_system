@@ -11,6 +11,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { format, isToday, isFuture } from 'date-fns';
 
+
 const StatusBadge = ({ status }) => {
   const map = {
     pending:      'badge-pending',
@@ -29,6 +30,7 @@ export default function PatientDashboard() {
   const [cancelling, setCancelling]         = useState(null);
   const [queueSnapshot, setQueueSnapshot]   = useState(null);
   const [queueLoading, setQueueLoading]     = useState(false);
+  const [selectedPrescription, setSelectedPrescription] = useState(null);
 
   useEffect(() => {
     api.get('/appointments')
@@ -247,14 +249,14 @@ export default function PatientDashboard() {
                     </Link>
                   )}
                   {/* Online join */}
-                  {a.type === 'online' && a.doctor?.meetingLink && a.status === 'in-progress' && (
+                  {a.type === 'online' && a.doctor?.meetingLink && (
                     <a
                       href={a.doctor.meetingLink}
                       target="_blank"
                       rel="noreferrer"
                       className="btn-success btn-sm text-xs"
                     >
-                      🎥 Join
+                      🎥 Join Meeting 
                     </a>
                   )}
                   {/* Cancel */}
@@ -292,12 +294,57 @@ export default function PatientDashboard() {
                     <p className="text-xs text-slate-400">{format(new Date(a.date), 'MMM d, yyyy')}</p>
                   </div>
                 </div>
-                <StatusBadge status={a.status} />
+               <div className="flex items-center gap-3">
+  <StatusBadge status={a.status} />
+  {a.paymentStatus === "paid" && (
+  <span className="ml-2 text-xs text-green-600 font-semibold">
+    💰 Paid
+  </span>
+)}
+{a.paymentStatus === "pending" && (
+  <span className="ml-2 text-xs text-red-500">
+    Unpaid
+  </span>
+)}
+
+  {a.prescription && (
+    <button
+      onClick={() => setSelectedPrescription(a.prescription)}
+      className="text-xs text-blue-600 hover:underline"
+    >
+      View Prescription
+    </button>
+  )}
+</div>
               </div>
             ))}
           </div>
         </div>
       )}
+      {selectedPrescription && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    
+    <div className="bg-white rounded-lg p-5 w-[350px] shadow-lg relative">
+      
+      <h3 className="text-lg font-semibold mb-2">
+        Prescription
+      </h3>
+
+      <p className="text-sm text-gray-600">
+        {selectedPrescription}
+      </p>
+
+      <button
+        onClick={() => setSelectedPrescription(null)}
+        className="absolute top-2 right-3 text-gray-500 hover:text-black"
+      >
+        ✖
+      </button>
+
+    </div>
+
+  </div>
+)}
     </div>
   );
 }

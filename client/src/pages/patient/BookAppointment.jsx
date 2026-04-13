@@ -30,6 +30,7 @@ export default function BookAppointment() {
   const [doctors, setDoctors] = useState([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [appointmentId, setAppointmentId] = useState(null); // add at top
   const [form, setForm] = useState({
     doctorId: '',
     date: todayISO(),
@@ -37,6 +38,36 @@ export default function BookAppointment() {
     type: 'offline',
     notes: '',
   });
+  const handlePayment = () => {
+  const options = {
+    key: "rzp_test_Sd63KcsfpYIFud",
+    amount: 50000,
+    currency: "INR",
+    name: "Hospital Queue System",
+    description: "Appointment Payment",
+
+handler: async function (response) {
+  console.log("Payment Response:", response);
+
+  if (appointmentId) {
+    await api.put(`/appointments/${appointmentId}`, {
+      paymentStatus: "paid",
+      paymentId: response.razorpay_payment_id
+    });
+
+    toast.success("Payment successful!");
+    navigate(`/patient/queue/${appointmentId}`);
+  }
+},
+
+    theme: {
+      color: "#2563eb"
+    }
+  };
+
+  const rzp = new window.Razorpay(options);
+  rzp.open();
+};
 
   useEffect(() => {
     const loadDoctors = async () => {
@@ -70,24 +101,26 @@ export default function BookAppointment() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const submit = async (e) => {
-    e.preventDefault();
-    if (!form.doctorId || !form.date || !form.timeSlot) {
-      toast.error('Please fill doctor, date and time slot');
-      return;
-    }
+ const submit = async (e) => {
+  e.preventDefault();
 
-    setSubmitting(true);
-    try {
-      const { data } = await api.post('/appointments', form);
-      toast.success(`Appointment booked! Token #${data.data.tokenNumber}`);
-      navigate(`/patient/queue/${data.data._id}`);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to book appointment');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  setSubmitting(true);
+  try {
+    const { data } = await api.post('/appointments', form);
+
+    setAppointmentId(data.data._id); // ✅ STORE ID
+
+    toast.success(`Appointment booked! Token #${data.data.tokenNumber}`);
+
+    // ❌ REMOVE this line for now
+    // navigate(`/patient/queue/${data.data._id}`);
+
+  } catch (err) {
+    toast.error('Failed to book appointment');
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   if (loadingDoctors) return <LoadingSpinner text="Loading doctors…" />;
 
@@ -206,6 +239,14 @@ export default function BookAppointment() {
             >
               {submitting ? <LoadingSpinner size="sm" text="" /> : 'Confirm Appointment'}
             </button>
+       <button
+  type="button"
+  onClick={handlePayment}
+  disabled={!appointmentId}
+  className="btn-primary"
+>
+  Pay Now
+</button>
           </form>
         </div>
 
