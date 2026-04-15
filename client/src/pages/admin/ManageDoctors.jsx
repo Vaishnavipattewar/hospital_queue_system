@@ -83,7 +83,7 @@ function DoctorModal({ doctor, onClose, onSaved }) {
                 <input type="number" name="experience" value={form.experience} onChange={set} min={0} className="input" placeholder="5" />
               </div>
               <div>
-                <label className="label">Consultation fee ($) *</label>
+                <label className="label">Consultation fee (Rs.) *</label>
                 <input type="number" name="fee" value={form.fee} onChange={set} required min={0} className="input" placeholder="500" />
               </div>
               <div>

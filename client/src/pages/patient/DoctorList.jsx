@@ -113,7 +113,7 @@ export default function DoctorList() {
               <div className="grid grid-cols-2 gap-3 mt-4 text-xs">
                 <div className="bg-slate-50 rounded-xl p-3">
                   <p className="text-slate-400">Consultation Fee</p>
-                  <p className="font-semibold text-slate-700">${doctor.fee}</p>
+                  <p className="font-semibold text-slate-700">Rs.{doctor.fee}</p>
                 </div>
                 <div className="bg-slate-50 rounded-xl p-3">
                   <p className="text-slate-400">Experience</p>

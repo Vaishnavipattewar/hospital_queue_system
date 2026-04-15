@@ -88,7 +88,7 @@ export default function AdminDashboard() {
           />
           <StatCard
             title="Total Revenue"
-            value={`$${(stats?.totalRevenue ?? 0).toLocaleString()}`}
+            value={`Rs.${(stats?.totalRevenue ?? 0).toLocaleString()}`}
             icon={FiDollarSign}
             iconBg="bg-emerald-50 text-emerald-600"
             subtitle="From completed appointments"

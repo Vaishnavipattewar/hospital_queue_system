@@ -277,7 +277,7 @@ handler: async function (response) {
               </div>
               <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
                 <p className="text-blue-500 text-xs">Consultation Fee</p>
-                <p className="font-bold text-blue-700">${selectedDoctor.fee}</p>
+                <p className="font-bold text-blue-700">Rs.{selectedDoctor.fee}</p>
               </div>
             </div>
           )}
